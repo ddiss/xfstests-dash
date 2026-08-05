@@ -1,5 +1,49 @@
 (function(){
 
+  function FlagErrUntilEdit(tex) {
+    if (tex.classList.contains("error-border"))
+        return;
+
+    tex.classList.add("error-border");
+    tex.addEventListener('change',
+      (e) => e.target.classList.remove("error-border"),
+      { once: true }
+    );
+  }
+
+  function loadURL(texurl) {
+    const texml = document.querySelector('textarea.xml');
+    const prevplace = texml.placeholder;
+    const getUrl = texurl.value;
+
+    try {
+        new URL(getUrl);
+    } catch (_) {
+        FlagErrUntilEdit(texurl);
+        console.log(`${getUrl} - invalid URL`);
+        return;
+    }
+    texml.value = '';
+    texml.placeholder = `Loading ${getUrl}`;
+
+    var xreq = new XMLHttpRequest();
+    xreq.onreadystatechange = function() {
+      texml.placeholder = prevplace;
+      if (xreq.readyState === 4) {
+        if (xreq.status !== 200) {
+          FlagErrUntilEdit(texurl);
+          console.log(`https request failed ${getUrl}`);
+          return;
+        }
+        // TODO: optimization: use ResponseXML instead of parseFromString(txt)
+        texml.value = xreq.responseText;
+        refresh();
+      }
+    }
+    xreq.open("GET", getUrl, true);
+    xreq.send(null);
+  }
+
   function copyTextToClipboard(textArea) {
     textArea.focus();
     textArea.select();
@@ -12,6 +56,7 @@
   }
   // to allow usage in onclick
   window.copyTextToClipboard = copyTextToClipboard;
+  window.loadURL = loadURL;
 
   function parseTestcases(testcaseNodes) {
     return testcaseNodes.map(testcase => {
