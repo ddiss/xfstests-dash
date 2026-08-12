@@ -468,7 +468,6 @@
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(text.trim(),"text/xml");
     const resultAsJson = convertToJson(xmlDoc);
-    document.querySelector('textarea.json').value = JSON.stringify(resultAsJson, null,2);
     document.querySelector('#result').innerHTML = tpl(resultAsJson);
     document.querySelector('textarea.html').value = document.querySelector('#result').innerHTML.trim();
     plotSvg(resultAsJson.testsuites);
