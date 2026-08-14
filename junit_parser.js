@@ -36,8 +36,7 @@
           return;
         }
         // TODO: optimization: use ResponseXML instead of parseFromString(txt)
-        texml.value = xreq.responseText;
-        refresh();
+        importRefresh(xreq.responseText, texml);
       }
     }
     xreq.open("GET", getUrl, true);
@@ -259,6 +258,14 @@
     parseText(text);
   }
 
+  function importRefresh(indata, texml) {
+    // FIXME: we assume URL / file imported data is XML text
+    texml.value = indata;
+    localStorage.setItem('xml', indata);
+
+    parseText(indata);
+  }
+
   function processFile(evt) {
     const texml = document.querySelector('textarea.xml');
     if (evt.target.files.length < 1) {
@@ -270,9 +277,8 @@
     texml.placeholder = 'Loading ' + evt.target.files[0].name;
     const fr = new FileReader();
     fr.onload = (ev) => {
-      texml.value = ev.target.result;
       texml.placeholder = prevplace;
-      refresh();
+      importRefresh(ev.target.result, texml);
     };
     fr.readAsText(evt.target.files[0]);
   }
