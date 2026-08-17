@@ -27,6 +27,8 @@
     texml.placeholder = `Loading ${getUrl}`;
 
     var xreq = new XMLHttpRequest();
+    // process response as binary arrayBuffer so that gunzip is possible
+    xreq.responseType = "arraybuffer";
     xreq.onreadystatechange = function() {
       texml.placeholder = prevplace;
       if (xreq.readyState === 4) {
@@ -35,8 +37,10 @@
           console.log(`https request failed ${getUrl}`);
           return;
         }
-        // TODO: optimization: use ResponseXML instead of parseFromString(txt)
-        importRefresh(xreq.responseText, texml);
+        const inBuf = xreq.response;
+        if (inBuf) {
+          importRefresh(inBuf, texml);
+        }
       }
     }
     xreq.open("GET", getUrl, true);
@@ -258,8 +262,11 @@
     parseText(text);
   }
 
-  function importRefresh(indata, texml) {
+  function importRefresh(inBuf, texml) {
     // FIXME: we assume URL / file imported data is XML text
+    var enc = new TextDecoder("utf-8");
+    const indata = enc.decode(inBuf);
+
     texml.value = indata;
     localStorage.setItem('xml', indata);
 
@@ -280,7 +287,7 @@
       texml.placeholder = prevplace;
       importRefresh(ev.target.result, texml);
     };
-    fr.readAsText(evt.target.files[0]);
+    fr.readAsArrayBuffer(evt.target.files[0]);
   }
 
   function plotSvg(tss) {
