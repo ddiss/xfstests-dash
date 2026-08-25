@@ -26,6 +26,7 @@
     texml.value = '';
     texml.placeholder = `Loading ${getUrl}`;
 
+    // TODO: use fetch(). See importRefresh comment.
     var xreq = new XMLHttpRequest();
     // process response as binary arrayBuffer so that gunzip is possible
     xreq.responseType = "arraybuffer";
@@ -262,15 +263,59 @@
     parseText(text);
   }
 
+  function importIsGz(inBuf) {
+    const magicView = new DataView(inBuf, 0, 2);
+    const magic = magicView.getUint16(0);
+
+    if (magic === 0x1f8b) {
+      console.log("detected GZIP");
+      return true;
+    }
+    return false;
+  }
+
+  function readAllChunks(rs) {
+    const reader = rs.getReader();
+    // TextDecoder ensures read() value type is string here...
+    let instr = "";
+
+    return pump();
+
+    function pump() {
+      return reader.read().then(({ value, done }) => {
+        if (done) {
+          return instr;
+        }
+
+        instr += value;
+        console.log(`${typeof value} len=${value.length} indata staged.`);
+        return pump();
+      });
+    }
+  }
+
   function importRefresh(inBuf, texml) {
-    // FIXME: we assume URL / file imported data is XML text
-    var enc = new TextDecoder("utf-8");
-    const indata = enc.decode(inBuf);
 
-    texml.value = indata;
-    localStorage.setItem('xml', indata);
+    // TODO: we should be able to use pipeThrough (or tee?) to check for
+    // gz magic at the start of the stream. This might then allow us to
+    // call with a promise param from fetch(url) or file blob.stream.
+    // See MDN strings-transform-stream/Uint8ArrayToStringsTransformer.js
+    const isGz = importIsGz(inBuf)
+    const inBlob = new Blob([inBuf]);
 
-    parseText(indata);
+    let blobStreamPromise = new Promise(res => {
+      res(inBlob.stream());
+    });
+
+    blobStreamPromise
+      .then(rs => isGz ? rs.pipeThrough(new DecompressionStream("gzip")) : rs)
+      .then(rs => rs.pipeThrough(new TextDecoderStream("utf-8")))
+      .then(rs => readAllChunks(rs))
+      .then(instr => {
+        texml.value = instr;
+        localStorage.setItem('xml', instr);
+        parseText(instr);
+      });
   }
 
   function processFile(evt) {
