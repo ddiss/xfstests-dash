@@ -6,9 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="normalize.css" type="text/css">
   <link rel="stylesheet" href="sakura-dark.css" type="text/css">
-  <title>JUnit Parser</title>
-  <meta name="description" content="A JUnit parser, visualizer and format converter">
-  <meta name="keywords" content="JUnit, JSON, Parser">
+  <title>xfstests dash</title>
+  <meta name="description" content="xfstests xunit results parser and visualizer">
+  <meta name="keywords" content="junit, xfstests, xunit">
   <meta name="author" content="André Tarnowsky">
   <style>
     body { max-width: 55em; }
@@ -34,7 +34,7 @@
 </head>
 <body>
 
-  <h1>JUnit Parser</h1>
+  <h1>xfstests dash</h1>
 
   <div id="plotVector" width="100%"></div>
 
@@ -43,11 +43,11 @@
       placeholder="XML - paste, or use button below to load from file..."
       rows="15"></textarea>
     <input type="file" id="file" name="file" accept=".gz,.xml,application/xml"
-      title="Load JUnit XML from file" />
+      title="Load xfstests xunit result.xml file" />
   </div>
   <div>
     <textarea class="url"
-      placeholder="https://ddiss.github.io/online-junit-parser/test/btrfs-fstests.xml"
+      placeholder="https://ddiss.github.io/xfstests-dash/test/btrfs-fstests.xml"
       rows="1"></textarea>
     <input type="button" value="Load from URL"
       onclick="loadURL(document.querySelector('textarea.url'))" />
