@@ -579,7 +579,7 @@
       window.__test_convertToJson = convertToJson;
       var js = document.createElement("script");
       js.type = "text/javascript";
-      js.src = "test/junit_parser_test.js";
+      js.src = "test/selftest.js";
       document.body.appendChild(js);
     }
   }
