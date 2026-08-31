@@ -1,40 +1,35 @@
 (function(){
-  function getPromiseFromEvent(item, event) {
-      return new Promise((resolve) => {
-            const listener = () => {
-                    item.removeEventListener(event, listener);
-                    resolve();
-                  }
-            item.addEventListener(event, listener);
-          })
-  }
-
-  async function waitForChange(item) {
-      await getPromiseFromEvent(item, "change")
-  }
-
   var chk_pass = 0;
   var chk_fail = 0;
 
   // selftest output is plain text. Don't use anything complex like XML ;-)
   function chk(msg, val, afn) {
+    const tlogEl = document.querySelector('#testlog');
     if (afn(val)) {
       chk_pass++;
-      document.querySelector('#testlog').value += `✅ ${msg} (${val})\n`;
+      tlogEl.value += `✅ ${msg} (${val})\n`;
     } else {
       chk_fail++;
-      document.querySelector('#testlog').value
-        += `⛔ ${msg} (${val}): \"${afn.toString()}\"\n`;
+      tlogEl.value += `⛔ ${msg} (${val}): \"${afn.toString()}\"\n`;
     }
   }
 
+  function chk_add_textarea() {
+    const div = document.createElement('div');
+    div.innerHTML = `<h1>Selftest</h1><textarea id="testlog" placeholder="selftest log" readonly></textarea>`;
+    document.body.insertBefore(div, document.body.childNodes[0]);
+  }
+
   function chk_summary() {
-    document.querySelector('#testlog').value
-      += `\n-> Selftest completed: ${chk_pass} passed, ${chk_fail} failed\n`;
+    const tlogEl = document.querySelector('#testlog');
+    tlogEl.value +=
+      `\n-> Selftest completed: ${chk_pass} passed, ${chk_fail} failed\n`;
+    // grow the results textarea to fit height
+    tlogEl.style.height = tlogEl.scrollHeight + "px";
   }
 
   function test_suites_container() {
-    document.querySelector('textarea.xml').value = `
+    const xunit = `
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites disabled="0"
   errors="0"
@@ -53,10 +48,8 @@
     </testcase>
   </testsuite>
 </testsuites>`;
-    document.querySelector('textarea.xml').dispatchEvent(new Event('change'));
-    // html is set after json, so can assume all json present after this(?)
-    waitForChange(document.querySelector('textarea.html'));
-    const obj = JSON.parse(document.querySelector('textarea.json').value);
+    const xDoc = new DOMParser().parseFromString(xunit.trim(), "text/xml");
+    const obj = window.__test_convertToJson(xDoc);
 
     chk("testsuites len", obj.testsuites.length, (l) => {return (l === 1)});
     chk("testsuites name", obj.testsuites[0].name,
@@ -88,7 +81,7 @@
   }
 
   function test_no_suites_container() {
-    document.querySelector('textarea.xml').value = `
+    const xunit = `
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuite name="xfstests" failures="0" skipped="0" tests="3" time="3" hostname="rapido1" timestamp="2022-09-29T12:54:02">
   <testcase classname="xfstests.global" name="generic/001" time="1">
@@ -98,9 +91,8 @@
   <testcase classname="xfstests.global" name="generic/656" time="1">
   </testcase>
 </testsuite>`;
-    document.querySelector('textarea.xml').dispatchEvent(new Event('change'));
-    waitForChange(document.querySelector('textarea.html'));
-    const obj = JSON.parse(document.querySelector('textarea.json').value);
+    const xDoc = new DOMParser().parseFromString(xunit.trim(), "text/xml");
+    const obj = window.__test_convertToJson(xDoc);
 
     // testsuites node should still exist, but only as wrapper for testsuite
     chk("testsuites", obj.testsuites, (o) => {return (o !== null)});
@@ -118,7 +110,7 @@
   }
 
   function test_syserr_out() {
-    document.querySelector('textarea.xml').value = `
+    const xunit = `
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuite name="xfstests" failures="1" skipped="1" tests="3" time="3" hostname="rapido1" timestamp="2022-09-29T12:54:02">
   <testcase classname="xfstests.global" name="generic/001" time="1">
@@ -147,10 +139,9 @@ QA output created by 656
     </system-err>
   </testcase>
 </testsuite>`;
-    document.querySelector('textarea.xml').dispatchEvent(new Event('change'));
-    waitForChange(document.querySelector('textarea.html'));
-    const obj = JSON.parse(document.querySelector('textarea.json').value);
-    //
+    const xDoc = new DOMParser().parseFromString(xunit.trim(), "text/xml");
+    const obj = window.__test_convertToJson(xDoc);
+
     chk("testsuites len", obj.testsuites.length, (l) => {return (l === 1)});
     chk("testsuite len", obj.testsuites[0].testsuite,
       (ts) => {return (ts.length === 1)});
@@ -171,7 +162,7 @@ QA output created by 656
   }
 
   function test_multi_suite() {
-    document.querySelector('textarea.xml').value = `
+    const xunit = `
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites name="multi_suite">
   <testsuite name="xfstests" failures="0" skipped="0" tests="3" time="3" hostname="rapido1" timestamp="2022-09-29T12:54:02">
@@ -189,9 +180,8 @@ QA output created by 656
     </testcase>
   </testsuite>
 </testsuites>`;
-    document.querySelector('textarea.xml').dispatchEvent(new Event('change'));
-    waitForChange(document.querySelector('textarea.html'));
-    const obj = JSON.parse(document.querySelector('textarea.json').value);
+    const xDoc = new DOMParser().parseFromString(xunit.trim(), "text/xml");
+    const obj = window.__test_convertToJson(xDoc);
 
     chk("testsuites", obj.testsuites, (o) => {return (o !== null)});
     chk("testsuites len", obj.testsuites.length, (l) => {return (l === 1)});
@@ -209,6 +199,7 @@ QA output created by 656
       (l) => {return (l === 2)});
   }
 
+  chk_add_textarea();
   test_suites_container();
   test_no_suites_container();
   test_syserr_out();

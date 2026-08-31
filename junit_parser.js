@@ -573,6 +573,15 @@
       }
       hel.scrollIntoView();
     }, false);
+
+    // the special #__selftest location hash triggers selftest import and run
+    if (document.location.hash === '#__selftest') {
+      window.__test_convertToJson = convertToJson;
+      var js = document.createElement("script");
+      js.type = "text/javascript";
+      js.src = "test/junit_parser_test.js";
+      document.body.appendChild(js);
+    }
   }
 
   init();
