@@ -48,11 +48,10 @@
       title="Load xfstests xunit result.xml file" />
   </div>
   <div>
-    <textarea class="url"
-      placeholder="https://ddiss.github.io/xfstests-dash/test/btrfs-fstests.xml"
-      rows="1"></textarea>
+    <input type="text" class="url"
+      placeholder="https://ddiss.github.io/xfstests-dash/test/btrfs-fstests.xml" />
     <input type="button" value="Load from URL"
-      onclick="loadURL(document.querySelector('textarea.url'))" />
+      onclick="loadURL(document.querySelector('input.url'))" />
   </div>
 
   <div id="settings">
