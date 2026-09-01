@@ -2,22 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="sakura-dark.css" type="text/css">
   <title>xfstests dash</title>
   <meta name="description" content="xfstests xunit results parser and visualizer">
   <meta name="keywords" content="junit, xfstests, xunit">
   <meta name="author" content="André Tarnowsky">
   <style>
-    body { max-width: 55em; }
-    textarea { font-size: 12px; }
-    pre { font-size: .75em; }
-    em { font-size: .75em; }
-    label { display: inline; }
-    .testsuite-name, .testcase-name { max-width: 400px;overflow: hidden;display: inline-block;white-space: nowrap;text-overflow: ellipsis;vertical-align: middle; }
-    .testcase-name { max-width:  600px;}
-    .copy-link { float:right; margin-top: -2em;}
+    body {
+      max-width: 55em;
+    }
+    textarea, input[type="text"] {
+      font-size: 12px;
+      width: 100%;
+    }
+    fieldset, h1 {
+      margin: 10px;
+    }
+    .testsuite-name, .testcase-name {
+      max-width: 400px;
+      overflow: hidden;
+      display: inline-block;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      vertical-align: middle;
+    }
+    .testcase-name {
+      max-width:  600px;
+    }
     .plot-rect {
       opacity: 0.8;
     }
@@ -29,8 +39,18 @@
     .error-border {
       border: 2px solid red;
     }
+    .import {
+      display: grid;
+      grid-auto-flow: column;
+      grid-column-gap: 8px;
+    }
     #plotVector {
       overflow: scroll;
+      width: 100%;
+      margin: 10px;
+    }
+    .xml {
+      margin: 10px;
     }
   </style>
 </head>
@@ -38,23 +58,9 @@
 
   <h1>xfstests dash</h1>
 
-  <div id="plotVector" width="100%"></div>
-
-  <div>
-    <textarea class="xml"
-      placeholder="XML - paste, or use button below to load from file..."
-      rows="15"></textarea>
-    <input type="file" id="file" name="file" accept=".gz,.xml,application/xml"
-      title="Load xfstests xunit result.xml file" />
-  </div>
-  <div>
-    <input type="text" class="url"
-      placeholder="https://ddiss.github.io/xfstests-dash/test/btrfs-fstests.xml" />
-    <input type="button" value="Load from URL"
-      onclick="loadURL(document.querySelector('input.url'))" />
-  </div>
-
-  <div id="settings">
+  <div id="plotVector"></div>
+  <fieldset id="settings">
+    <legend>Plot settings:</legend>
     <input id="settingPlotPassed" class="setting" type="checkbox" checked>
     <label for="settingPlotPassed">Plot passed tests.</label>
     <input id="settingPlotSkipped" class="setting" type="checkbox" checked>
@@ -63,7 +69,25 @@
     <label for="settingPlotFailed">Plot failed tests.</label>
     <input id="settingErrorIsFailure" class="setting" type="checkbox" checked>
     <label for="settingErrorIsFailure">Treat errors as if they were failures.</label>
-  </div>
+  </fieldset>
+
+  <textarea class="xml"
+    placeholder="xunit XML - paste here, or use import fields below..."
+    rows="15"></textarea>
+
+  <fieldset>
+    <legend>Import xunit data from local file:</legend>
+      <input type="file" id="file" name="file" accept=".gz,.xml,application/xml"
+        title="Load xfstests xunit result.xml file" />
+  </fieldset>
+  <fieldset class="import">
+    <legend>Import from URL:</legend>
+    <input type="text" class="url"
+      placeholder="https://ddiss.github.io/xfstests-dash/test/btrfs-fstests.xml" />
+    <input type="button" value="Import"
+      onclick="loadURL(document.querySelector('input.url'))" />
+  </fieldset>
+
   <div id="result"></div>
   <script src="xfstests_dash.js"></script>
 </body>
