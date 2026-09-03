@@ -48,18 +48,7 @@
     xreq.send(null);
   }
 
-  function copyTextToClipboard(textArea) {
-    textArea.focus();
-    textArea.select();
-
-    try {
-      const success = document.execCommand('copy');
-    } catch (err) {
-      console.log('unable to copy');
-    }
-  }
   // to allow usage in onclick
-  window.copyTextToClipboard = copyTextToClipboard;
   window.loadURL = loadURL;
 
   function parseTestcases(testcaseNodes) {
