@@ -508,7 +508,7 @@
 
       plotSuite(ts_i, suite, svg_suite_state[suite.name]);
     });
-
+    plotDiv.scrollIntoView();
   }
 
   function parseText(text) {
