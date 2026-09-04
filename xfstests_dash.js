@@ -251,8 +251,13 @@
 
   function filterPlot(e) {
     let lsVal;
-    console.assert(e && e.target.className === "setting");
-    lsVal = e.target.checked;
+
+    if (e.target.type === "checkbox") {
+      lsVal = e.target.checked;
+    } else {
+      // testRegex
+      lsVal = e.target.value;
+    }
     localStorage.setItem(e.target.id, lsVal);
     if (window.svg_testsuites) {
       plotSvg(window.svg_testsuites);
@@ -406,7 +411,8 @@
 
         if ((!filters.failed && (tc.failure || tc.error))
          || (!filters.skipped && tc.skipped)
-         || (!filters.passed && !tc.failure && !tc.error && !tc.skipped)) {
+         || (!filters.passed && !tc.failure && !tc.error && !tc.skipped)
+         || (filters.tname_re && !tc.name.match(filters.tname_re))) {
           //console.log("skipping due to filter:", tc);
           continue;
         }
@@ -496,7 +502,18 @@
       failed: document.getElementById('settingPlotFailed').checked,
       skipped: document.getElementById('settingPlotSkipped').checked,
       passed: document.getElementById('settingPlotPassed').checked,
+      tname_re: null,
     };
+    const tname_filter =  document.querySelector("#testRegex");
+    if (tname_filter.value != "") {
+      try {
+        filters.tname_re = new RegExp(tname_filter.value);
+      } catch (e) {
+        FlagErrUntilEdit(tname_filter);
+        console.log(`bad regex: ${tname_filter.value}: ${e}`);
+        // continue without filter
+      }
+    }
     var suite;
     var ts_i;
     // plot matching testsuites on the same graph, reusing common x-axis points
@@ -543,6 +560,7 @@
   function init() {
     document.querySelector('textarea.xml').addEventListener('change', refreshXml);
     document.querySelector('#file').addEventListener('change', processFile);
+    document.querySelector("#testRegex").addEventListener('change', filterPlot);
     window.svg_testsuites = null;
     document.querySelectorAll('.setting').forEach(function(s) {
       s.addEventListener('change', filterPlot);
@@ -551,9 +569,14 @@
       if (ls === null) {
         return;
       }
-      const bval = strToBool(ls);
-      if (bval != s.checked) {
-        s.checked = bval;
+      if (s.type === "checkbox") {
+        const bval = strToBool(ls);
+        if (bval != s.checked) {
+          s.checked = bval;
+        }
+      } else {
+        // testRegex
+        s.value = ls;
       }
     });
     const lsXml = localStorage.getItem('xml');
