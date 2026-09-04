@@ -242,14 +242,21 @@
       + '</div>';
   }
 
-  function refresh(e) {
-    const text = document.querySelector('textarea.xml').value;
+  function refreshXml(e) {
+    console.assert(e && e.target.className === "xml");
+    const text = e.target.value;
     localStorage.setItem('xml', text);
-
-    if (e && e.target.className === "setting") {
-      localStorage.setItem(e.target.id, e.target.checked);
-    }
     parseText(text);
+  }
+
+  function filterPlot(e) {
+    let lsVal;
+    console.assert(e && e.target.className === "setting");
+    lsVal = e.target.checked;
+    localStorage.setItem(e.target.id, lsVal);
+    if (window.svg_testsuites) {
+      plotSvg(window.svg_testsuites);
+    }
   }
 
   function importIsGz(inBuf) {
@@ -385,7 +392,7 @@
       return svg;
     }
 
-    function plotSuite(ts_i, suite, svg_suite_state) {
+    function plotSuite(ts_i, suite, svg_suite_state, filters) {
       const svg = svg_suite_state.svg;
       const xinc = 15;
       // path line joins up all points
@@ -397,12 +404,9 @@
         var rfill;
         var title = null;
 
-        if ((!document.getElementById('settingPlotFailed').checked
-             && (tc.failure || tc.error))
-         || (!document.getElementById('settingPlotSkipped').checked
-             && tc.skipped)
-         || (!document.getElementById('settingPlotPassed').checked
-             && !tc.failure && !tc.error && !tc.skipped)) {
+        if ((!filters.failed && (tc.failure || tc.error))
+         || (!filters.skipped && tc.skipped)
+         || (!filters.passed && !tc.failure && !tc.error && !tc.skipped)) {
           //console.log("skipping due to filter:", tc);
           continue;
         }
@@ -488,6 +492,11 @@
       return;
     }
 
+    let filters = {
+      failed: document.getElementById('settingPlotFailed').checked,
+      skipped: document.getElementById('settingPlotSkipped').checked,
+      passed: document.getElementById('settingPlotPassed').checked,
+    };
     var suite;
     var ts_i;
     // plot matching testsuites on the same graph, reusing common x-axis points
@@ -506,7 +515,7 @@
         };
       }
 
-      plotSuite(ts_i, suite, svg_suite_state[suite.name]);
+      plotSuite(ts_i, suite, svg_suite_state[suite.name], filters);
     });
     plotDiv.scrollIntoView();
   }
@@ -517,6 +526,8 @@
     const resultAsJson = convertToJson(xmlDoc);
     document.querySelector('#result').innerHTML = tpl(resultAsJson);
     plotSvg(resultAsJson.testsuites);
+    // stash for any filter redraws later
+    window.svg_testsuites = resultAsJson.testsuites;
   }
 
   function strToBool(s) {
@@ -530,10 +541,11 @@
   }
 
   function init() {
-    document.querySelector('textarea.xml').addEventListener('change', refresh);
+    document.querySelector('textarea.xml').addEventListener('change', refreshXml);
     document.querySelector('#file').addEventListener('change', processFile);
+    window.svg_testsuites = null;
     document.querySelectorAll('.setting').forEach(function(s) {
-      s.addEventListener('change', refresh);
+      s.addEventListener('change', filterPlot);
       // restore settings from storage
       const ls = localStorage.getItem(s.id)
       if (ls === null) {
