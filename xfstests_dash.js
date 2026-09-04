@@ -7,7 +7,7 @@
     tex.classList.add("error-border");
     tex.addEventListener('change',
       (e) => e.target.classList.remove("error-border"),
-      { once: true }
+      { capture: true, once: true }
     );
   }
 
