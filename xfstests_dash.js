@@ -550,8 +550,12 @@
       parseText(lsXml);
     }
     // #case.$testsuite_id.$testcase_id URL opens and scrolls to details
-    window.addEventListener('hashchange', () => {
-      var hel = document.getElementById(document.location.hash.substr(1));
+    window.addEventListener('hashchange', (e) => {
+      const hash = document.location.hash;
+      if (hash === "") {
+        return;
+      }
+      var hel = document.getElementById(hash.substr(1));
       if (hel === null) {
         return;
       }
