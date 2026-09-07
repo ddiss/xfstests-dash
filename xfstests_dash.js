@@ -146,9 +146,7 @@
   }
 
   function tplSuiteResult(testsuite) {
-    const errorIsFailure = document.getElementById('settingErrorIsFailure').checked;
-    if ((testsuite.failures > 0)
-      || (errorIsFailure && testsuite.errors && testsuite.errors > 0)) {
+    if (testsuite.failures > 0 || (testsuite.errors && testsuite.errors > 0)) {
       return `<span style="color: red">⛔</span>`;
     }
     return `<span style="color: green">✅</span>`;
@@ -579,6 +577,10 @@
         s.value = ls;
       }
     });
+    // settingErrorIsFailure is now unused. Delete to avoid stale key retention.
+    // TODO: drop this later
+    localStorage.removeItem("settingErrorIsFailure");
+
     const lsXml = localStorage.getItem('xml');
     if (lsXml) {
       document.querySelector('textarea.xml').value = lsXml;
