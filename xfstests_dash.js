@@ -75,13 +75,26 @@
     });
   }
 
+  function parseTestsuiteProps(props) {
+    let propsObj = {};
+    props.forEach(prop => {
+      let name = prop.getAttribute('name');
+      if (name) {
+        propsObj[name] = prop.getAttribute('value');
+      }
+    });
+    return propsObj;
+  }
+
   function parseTestsuite(testsuiteNodes) {
     return testsuiteNodes.map(testsuite => {
       const testcases = [...testsuite.querySelectorAll(':scope > testcase')];
+      const properties = testsuite.querySelectorAll('properties > property');
       return {
         id: testsuite.getAttribute('id'),
         name: testsuite.getAttribute('name'),
         package: testsuite.getAttribute('package'),
+        props: parseTestsuiteProps(properties),
         hostname: testsuite.getAttribute('hostname'),
         disabled: testsuite.getAttribute('disabled') ? parseInt(testsuite.getAttribute('disabled'), 10) : null,
         failures: testsuite.getAttribute('failures') ? parseInt(testsuite.getAttribute('failures'), 10) : null,
