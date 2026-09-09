@@ -401,8 +401,7 @@
       svg.appendChild(n);
       plotDiv.appendChild(svg);
 
-      // initial dimensions based on chart title. Width may be extended later.
-      svg.setAttribute('width', svg.getBBox().width + 10);
+      // width set later after filling x-axis
       svg.setAttribute('height', '500');
 
       return svg;
@@ -497,10 +496,6 @@
         svg_suite_state.line_sibling.after(n);
         svg_suite_state.line_sibling = n;
       }
-
-      if (xcoord > svg.getAttribute('width')) {
-        svg.setAttribute('width', xcoord);  // resize to fit bounds
-      }
     }
 
     const plotDiv = document.getElementById("plotVector");
@@ -527,13 +522,15 @@
     }
     var suite;
     var ts_i;
+    var svg;
     // plot matching testsuites on the same graph, reusing common x-axis points
     var svg_suite_state = {};
     tss[0].testsuite.forEach((suite, ts_i) => {
       if (suite.name in svg_suite_state) {
+        svg = svg_suite_state[suite.name].svg;
         svg_suite_state[suite.name].plot_i++;
       } else {
-        const svg = plotInit(plotDiv, suite.name);
+        svg = plotInit(plotDiv, suite.name);
         svg_suite_state[suite.name] = {
           'svg': svg,
           xcoord_next: 5,
@@ -544,6 +541,9 @@
       }
 
       plotSuite(ts_i, suite, svg_suite_state[suite.name], filters);
+
+      // extend width to accommodate filled x-axes
+      svg.setAttribute('width', svg.getBBox().width + 10);
     });
     plotDiv.scrollIntoView();
   }
