@@ -392,13 +392,6 @@
         svg.appendChild(g);
       });
 
-      n = node('text', { x: '50%', y: '28', 'text-anchor': 'middle',
-        'font-size': '28', fill: 'white' });
-      svg.appendChild(n);
-      n.appendChild(
-        document.createTextNode(`Results for Test Suite ${suite_name}`)
-      );
-      svg.appendChild(n);
       plotDiv.appendChild(svg);
 
       // width set later after filling x-axis
@@ -407,13 +400,19 @@
       return svg;
     }
 
+    function plotSuiteTitle(suite) {
+      const props = suite.props;
+      const txt = `${props["FSTYP"]}, ${props["KERNEL"]}, ${props["ARCH"]}, ${props["CHECK_OPTIONS"]}, ${suite.timestamp.toISOString()}`;
+      return document.createTextNode(txt);
+    }
+
     function plotSuite(ts_i, suite, svg_suite_state, filters) {
       const svg = svg_suite_state.svg;
       const xinc = 15;
       // path line joins up all points
       var line = null;
       var xcoord = svg_suite_state.xcoord_next;
-      var ycoord
+      var ycoord;
       for (let i = 0; i < suite.testcases.length; i++) {
         const tc = suite.testcases[i];
         var rfill;
@@ -449,6 +448,9 @@
           xcoord_next = xcoord;
           xcoord = svg_suite_state.case_xcoords[tc.name];
         } else {
+          // testcases which aren't already plotted are appended to the end of
+          // the graph. XXX: this makes @line coordinates jump around! It also
+          // means that x-adjacent points may not represent running order.
           xcoord_next = xcoord + xinc;
           svg_suite_state.case_xcoords[tc.name] = xcoord;
           text_ycoord = 500;
@@ -479,6 +481,7 @@
           // +5 for middle of rect
           line = `M ${xcoord + 5} ${ycoord + 5}`;
         } else {
+          // TODO: optimization: collapse middle points if same ycoord
           line += ` L ${xcoord + 5} ${ycoord + 5}`;
         }
 
@@ -489,10 +492,26 @@
       // we left off.
       svg_suite_state.xcoord_next = xcoord;
 
+      // line null if filtering all or missing testcases
       if (line) {
         const color = line_colors[svg_suite_state.plot_i % line_colors.length];
         n = node('path',  // path connecting all points
           { fill: 'none', stroke: color, 'stroke-width': '3', d: line });
+        svg_suite_state.line_sibling.after(n);
+        svg_suite_state.line_sibling = n;
+
+        // line title
+        ycoord = (15 * svg_suite_state.plot_i) + 15;
+        line = `M 5 ${ycoord} L ${xinc * 2} ${ycoord}`;
+        n = node('path',
+          { fill: 'none', stroke: color, 'stroke-width': '5', d: line });
+        // XXX: can we use appendChild() and drop the after() + reassignment here?
+        svg_suite_state.line_sibling.after(n);
+        svg_suite_state.line_sibling = n;
+
+        n = node('text',
+          { x: xinc * 3, y: ycoord + 4, 'font-size': '12', fill: color });
+        n.appendChild(plotSuiteTitle(suite));
         svg_suite_state.line_sibling.after(n);
         svg_suite_state.line_sibling = n;
       }
