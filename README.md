@@ -1,4 +1,4 @@
-# xfstests-dash
+# xfstests dash
 An in-browser parser and visualizer for xfstests xunit output.
 Based on https://github.com/lotterfriends/online-junit-parser by André Tarnowsky.
 
@@ -6,6 +6,9 @@ Based on https://github.com/lotterfriends/online-junit-parser by André Tarnowsk
 Visit https://ddiss.github.io/xfstests-dash or clone this repository and open index.html in your browser.
 Run xfstests with xunit results output, e.g. `./check -R xunit`.
 Copy the `results/result.xml` output into the dashboard text input or use the file picker.
+
+## Privacy
+All data processing is performed locally by your web browser; xfstests dash can be used offline.
 
 ## Testing
 Self-testing is handled by `test/selftest.js`. The tests are triggered on demand when the page is loaded via:
