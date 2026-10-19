@@ -307,22 +307,14 @@
   }
 
   function importRefresh(inBuf, texml) {
-
     // TODO: we should be able to use pipeThrough (or tee?) to check for
     // gz magic at the start of the stream. This might then allow us to
     // call with a promise param from fetch(url) or file blob.stream.
     // See MDN strings-transform-stream/Uint8ArrayToStringsTransformer.js
-    const isGz = importIsGz(inBuf)
-    const inBlob = new Blob([inBuf]);
-
-    let blobStreamPromise = new Promise(res => {
-      res(inBlob.stream());
-    });
-
-    blobStreamPromise
-      .then(rs => isGz ? rs.pipeThrough(new DecompressionStream("gzip")) : rs)
-      .then(rs => rs.pipeThrough(new TextDecoderStream("utf-8")))
-      .then(rs => readAllChunks(rs))
+    const isGz = importIsGz(inBuf);
+    let rs = new Blob([inBuf]).stream();
+    rs = isGz ? rs.pipeThrough(new DecompressionStream("gzip")) : rs;
+    new Response(rs).text()
       .then(instr => {
         texml.value = instr;
         localStorage.setItem('xml', instr);
