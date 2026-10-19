@@ -286,26 +286,6 @@
     return false;
   }
 
-  function readAllChunks(rs) {
-    const reader = rs.getReader();
-    // TextDecoder ensures read() value type is string here...
-    let instr = "";
-
-    return pump();
-
-    function pump() {
-      return reader.read().then(({ value, done }) => {
-        if (done) {
-          return instr;
-        }
-
-        instr += value;
-        console.log(`${typeof value} len=${value.length} indata staged.`);
-        return pump();
-      });
-    }
-  }
-
   function importRefresh(inBuf, texml) {
     // TODO: we should be able to use pipeThrough (or tee?) to check for
     // gz magic at the start of the stream. This might then allow us to
