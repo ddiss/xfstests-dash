@@ -16,36 +16,17 @@
     const prevplace = texml.placeholder;
     const getUrl = texurl.value;
 
-    try {
-        new URL(getUrl);
-    } catch (_) {
-        FlagErrUntilEdit(texurl);
-        console.log(`${getUrl} - invalid URL`);
-        return;
-    }
     texml.value = '';
     texml.placeholder = `Loading ${getUrl}`;
 
-    // TODO: use fetch(). See importRefresh comment.
-    var xreq = new XMLHttpRequest();
-    // process response as binary arrayBuffer so that gunzip is possible
-    xreq.responseType = "arraybuffer";
-    xreq.onreadystatechange = function() {
-      texml.placeholder = prevplace;
-      if (xreq.readyState === 4) {
-        if (xreq.status !== 200) {
-          FlagErrUntilEdit(texurl);
-          console.log(`https request failed ${getUrl}`);
-          return;
-        }
-        const inBuf = xreq.response;
-        if (inBuf) {
-          importRefresh(inBuf, texml);
-        }
-      }
-    }
-    xreq.open("GET", getUrl, true);
-    xreq.send(null);
+    fetch(getUrl)
+      .then(rsp => importRefresh(rsp.body, getUrl, texml))
+      .catch(e => {
+        // TODO: finer grained error handling (fetch vs XML error)
+        FlagErrUntilEdit(texurl);
+        console.log(`${getUrl} - failed to fetch URL`);
+      })
+      .finally(() => texml.placeholder = prevplace);
   }
 
   // to allow usage in onclick
@@ -275,26 +256,15 @@
     }
   }
 
-  function importIsGz(inBuf) {
-    const magicView = new DataView(inBuf, 0, 2);
-    const magic = magicView.getUint16(0);
-
-    if (magic === 0x1f8b) {
-      console.log("detected GZIP");
-      return true;
+  // @stream: readable-stream with file or web-sourced junit data
+  // @path: a file or URL path associated with @stream
+  function importRefresh(rstream, path, texml) {
+    let rs = rstream;
+    if (path.endsWith("\.gz") || path.endsWith("\.gzip")) {
+      console.log(`${path}: assuming gzip data based on suffix`);
+      rs = rstream.pipeThrough(new DecompressionStream("gzip"));
     }
-    return false;
-  }
-
-  function importRefresh(inBuf, texml) {
-    // TODO: we should be able to use pipeThrough (or tee?) to check for
-    // gz magic at the start of the stream. This might then allow us to
-    // call with a promise param from fetch(url) or file blob.stream.
-    // See MDN strings-transform-stream/Uint8ArrayToStringsTransformer.js
-    const isGz = importIsGz(inBuf);
-    let rs = new Blob([inBuf]).stream();
-    rs = isGz ? rs.pipeThrough(new DecompressionStream("gzip")) : rs;
-    new Response(rs).text()
+    return new Response(rs).text()
       .then(instr => {
         texml.value = instr;
         localStorage.setItem('xml', instr);
@@ -308,15 +278,12 @@
       console.log('invalid files length: ' + evt.target.files.length);
       return;
     }
+    const f = evt.target.files[0];
     texml.value = '';
     const prevplace = texml.placeholder;
-    texml.placeholder = 'Loading ' + evt.target.files[0].name;
-    const fr = new FileReader();
-    fr.onload = (ev) => {
-      texml.placeholder = prevplace;
-      importRefresh(ev.target.result, texml);
-    };
-    fr.readAsArrayBuffer(evt.target.files[0]);
+    texml.placeholder = 'Loading ' + f.name;
+    importRefresh(f.stream(), f.name, texml)
+      .finally(() => texml.placeholder = prevplace);
   }
 
   function plotSvg(tss) {
